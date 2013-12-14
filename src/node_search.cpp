@@ -145,8 +145,7 @@ GBMRESULT CNodeSearch::Set
     double dTotalW,
     unsigned long cTotalN,
     CNodeTerminal *pThisNode,
-    CNode **ppParentPointerToThisNode,
-    CNodeFactory *pNodeFactory
+    CNode **ppParentPointerToThisNode
 )
 {
     GBMRESULT hr = GBM_OK;
@@ -187,7 +186,6 @@ GBMRESULT CNodeSearch::Set
 
     this->pThisNode = pThisNode;
     this->ppParentPointerToThisNode = ppParentPointerToThisNode;
-    this->pNodeFactory = pNodeFactory;
 
     return hr;
 }
@@ -348,37 +346,36 @@ GBMRESULT CNodeSearch::SetupNewNodes
 )
 {
     GBMRESULT hr = GBM_OK;
-    CNodeContinuous *pNewNodeContinuous = NULL;
-    CNodeCategorical *pNewNodeCategorical = NULL;
     unsigned long i=0;
 
-    pNewLeftNode    = pNodeFactory->GetNewNodeTerminal();
-    pNewRightNode   = pNodeFactory->GetNewNodeTerminal();
-    pNewMissingNode = pNodeFactory->GetNewNodeTerminal();
+    pNewLeftNode    = new CNodeTerminal();
+    pNewRightNode   = new CNodeTerminal();
+    pNewMissingNode = new CNodeTerminal();
 
     // set up a continuous split
     if(cBestVarClasses==0)
     {
-        pNewNodeContinuous = pNodeFactory->GetNewNodeContinuous();
+      CNodeContinuous* pNewNodeContinuous = new CNodeContinuous();
 
-        pNewNodeContinuous->dSplitValue = dBestSplitValue;
-        pNewNodeContinuous->iSplitVar = iBestSplitVar;
-
-        pNewSplitNode = pNewNodeContinuous;
+      pNewNodeContinuous->dSplitValue = dBestSplitValue;
+      pNewNodeContinuous->iSplitVar = iBestSplitVar;
+      
+      pNewSplitNode = pNewNodeContinuous;
     }
     else
     {
         // get a new categorical node and its branches
-        pNewNodeCategorical = pNodeFactory->GetNewNodeCategorical();
+      CNodeCategorical *pNewNodeCategorical = NULL;
+      pNewNodeCategorical = new CNodeCategorical();
 
-        // set up the categorical split
-        pNewNodeCategorical->iSplitVar = iBestSplitVar;
-        pNewNodeCategorical->aiLeftCategory.resize(1 + (ULONG)dBestSplitValue);
-	std::copy(aiBestCategory.begin(),
-		  aiBestCategory.begin() + pNewNodeCategorical->aiLeftCategory.size(),
-		  pNewNodeCategorical->aiLeftCategory.begin());
-
-        pNewSplitNode = pNewNodeCategorical;
+      // set up the categorical split
+      pNewNodeCategorical->iSplitVar = iBestSplitVar;
+      pNewNodeCategorical->aiLeftCategory.resize(1 + (ULONG)dBestSplitValue);
+      std::copy(aiBestCategory.begin(),
+		aiBestCategory.begin() + pNewNodeCategorical->aiLeftCategory.size(),
+		pNewNodeCategorical->aiLeftCategory.begin());
+      
+      pNewSplitNode = pNewNodeCategorical;
     }
 
     *ppParentPointerToThisNode = pNewSplitNode;
@@ -400,7 +397,8 @@ GBMRESULT CNodeSearch::SetupNewNodes
     pNewMissingNode->dTrainW     = dBestMissingTotalW;
     pNewMissingNode->cN          = cBestMissingN;
 
-    pThisNode->RecycleSelf(pNodeFactory);
+    delete pThisNode;
+    pThisNode = NULL;
 
     return hr;
 }
