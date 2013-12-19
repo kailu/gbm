@@ -294,7 +294,7 @@ gbm.fit <- function(x,y,
    # create index upfront... subtract one for 0 based order
    x.order <- apply(x[1:nTrain,,drop=FALSE],2,order,na.last=FALSE)-1
 
-   x <- as.vector(data.matrix(x))
+   x <- data.matrix(x)
    predF <- rep(0,length(y))
    train.error <- rep(0,n.trees)
    valid.error <- rep(0,n.trees)
@@ -310,31 +310,27 @@ gbm.fit <- function(x,y,
       stop("var.monotone must be -1, 0, or 1")
    }
    fError <- FALSE
-
-   gbm.obj <- .Call("gbm",
-                    Y=as.double(y),
-                    Offset=as.double(offset),
-                    X=as.double(x),
-                    X.order=as.integer(x.order),
-                    weights=as.double(w),
-                    Misc=as.double(Misc),
-                    cRows=as.integer(cRows),
-                    cCols=as.integer(cCols),
-                    var.type=as.integer(var.type),
-                    var.monotone=as.integer(var.monotone),
-                    distribution=as.character(distribution.call.name),
-                    n.trees=as.integer(n.trees),
-                    interaction.depth=as.integer(interaction.depth),
-                    n.minobsinnode=as.integer(n.minobsinnode),
-                    n.classes = as.integer(nClass),
-                    shrinkage=as.double(shrinkage),
-                    bag.fraction=as.double(bag.fraction),
-                    nTrain=as.integer(nTrain),
-                    fit.old=as.double(NA),
-                    n.cat.splits.old=as.integer(0),
-                    n.trees.old=as.integer(0),
-                    verbose=as.integer(verbose),
-                    PACKAGE = "gbm")
+   gbm.obj <- .External(cGBM,
+                        Y=as.double(y),
+                        Offset=as.double(offset),
+                        X=x,
+                        X.order=as.integer(x.order),
+                        weights=as.double(w),
+                        Misc=as.double(Misc),
+                        var.type=as.integer(var.type),
+                        var.monotone=as.integer(var.monotone),
+                        distribution=as.character(distribution.call.name),
+                        n.trees=as.integer(n.trees),
+                        interaction.depth=as.integer(interaction.depth),
+                        n.minobsinnode=as.integer(n.minobsinnode),
+                        n.classes = as.integer(nClass),
+                        shrinkage=as.double(shrinkage),
+                        bag.fraction=as.double(bag.fraction),
+                        nTrain=as.integer(nTrain),
+                        fit.old=as.double(NA),
+                        n.cat.splits.old=as.integer(0),
+                        n.trees.old=as.integer(0),
+                        verbose=as.integer(verbose))
 
    names(gbm.obj) <- c("initF","fit","train.error","valid.error",
                        "oobag.improve","trees","c.splits")

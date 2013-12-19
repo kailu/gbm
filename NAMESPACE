@@ -1,7 +1,7 @@
 # Export all names that don't start with "."
 exportPattern("^[^\\.]")
 
-useDynLib(gbm)
+useDynLib(gbm, cGBM)
 
 importFrom(survival, Surv)
 
